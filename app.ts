@@ -1,0 +1,45 @@
+import express, { Request, Response, NextFunction } from "express";
+export const app = express();
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import { ErrorMiddleware } from "./middlewares/error";
+import userRouter from "./routers/user.Router";
+import productRouter from "./routers/product.Router";
+import leafMateiralRouter from "./routers/leaf.mateiral.router";
+import rootMateiralRouter from "./routers/root.mateiral.router";
+import orderRouter from "./routers/order.router";
+require('dotenv').config();
+
+
+app.use(express.json({limit: '50mb'}));
+app.use(cookieParser());
+
+app.use(cors({
+    origin: process.env.ORIGIN,
+    credentials: true
+}));
+
+app.get("/test", (req: Request, res: Response, next: NextFunction) => {
+    res.status(200).json({
+        sucess: true,
+        message: "API is working"
+    });
+});
+
+app.use("/api/v1/user", userRouter);
+app.use("/api/v1/product", productRouter);
+app.use("/api/v1/leaf", leafMateiralRouter);
+app.use("/api/v1/root", rootMateiralRouter);
+app.use("/api/v1/order", orderRouter);
+
+
+
+app.all("*", (req: Request, res: Response, next: NextFunction) => {
+    const err = new Error(`Route ${req.originalUrl} not found`) as any;
+    err.statusCode = 404;
+    next(err);
+}) 
+
+
+app.use(ErrorMiddleware);
+

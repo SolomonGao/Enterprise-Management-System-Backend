@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>XX公司激活码</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <style type="text/css">
+        /* Base */
+        body {
+            margin: 0;
+            padding: 0;
+            min-width: 100%;
+            font-family:  Arial, Helvetica, sans-serif;
+            line-height: 1.5;
+            background-color: #fafafa;
+            color: #222222;
+        }
+        a {
+            color: #000;
+            text-decoration: none;
+        }
+        h1 {
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-top: 0;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+        p {
+            margin-top: 0;
+            margin-bottom: 24px;
+        }
+        table td {
+           vertical-align: top;
+        }
+        /* Layout */
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .email-header {
+            background-color: aquamarine;
+            padding: 24px;
+            color: #ffffff;
+        }
+        .email-body {
+            background-color: #ffffff;
+            padding: 24px;
+        }
+        .email-footer {
+            background-color: #f5f5f5;
+            padding: 24px;
+        }
+        /* Buttons */
+        .button {
+            display: inline-block;
+            background-color: #0070f3;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+        }
+        </style>
+
+        <div class="email-wrapper">
+        <div class="email-header">
+            <h1>欢迎</h1>
+        </div>
+        <div class="email-body">
+            <p>你好 <%= user.name %>,</p>
+            <p>请使用下面的验证码来激活您的账号：</p>
+            <h2><%= activationCode %></h2>
+            <p>请在五分钟以内在激活页面输入这个激活码。</p>
+            <p>如果您并没有注册请忽视这封邮件。</p>
+        </div>
+        <div class="email-footer">
+            <p>如果您有任何问题请联系： <a href="mailto: 738234123@qq.com">738234123@qq.com</a></p>
+        </div>
+        </div>
+    </style>
+</head>
+<body>
+    </body>
+</html>
