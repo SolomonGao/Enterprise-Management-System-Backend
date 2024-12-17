@@ -3,15 +3,26 @@ import { Sequelize } from "sequelize-typescript";
 require("dotenv").config();
 
 const sequelize = new Sequelize(`mysql://${process.env.MYSQL_USER}:${process.env.MYSQL_PASSWORD}@${process.env.MYSQL_HOST}:${process.env.MYSQL_PORT}/${process.env.MYSQL_DATABASE}`, {
+    logging: console.log, // 启用 Sequelize 的查询日志
     
 });
 
+sequelize.sync({ force: false })  // force: true 将删除表并重新创建
+  .then(() => {
+    console.log('Database & tables have been created!');
+  })
+  .catch((err) => {
+    console.error('Error creating database tables:', err);
+  });
+
+
 sequelize.addModels([path.resolve(__dirname, '../models/sql')])
 
-const connectMysql = async() => {
+const connectMysql = async () => {
     try {
         await sequelize.authenticate();
         console.log("Mysql has been connected.");
+        
     } catch (error: any) {
         console.log(error.message);
         setTimeout(connectMysql, 5000);

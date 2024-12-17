@@ -70,7 +70,6 @@ export default class ProductModel extends Model<IProduct> {
     })
     version!: number;
 
-
     @BelongsToMany(() => LeafMaterialModel, () => ProductMaterialModel, 'products_idproduct', 'leaf_materials_drawing_no')
     leafMaterials?: LeafMaterialModel[];
 

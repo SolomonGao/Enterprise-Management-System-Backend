@@ -120,8 +120,6 @@ export const searchMaterialsByRoot = CatchAsyncError(async (req: Request, res: R
             sortBy = "name"
         } = req.query;
 
-        const allowedSortFields = ["name", "counts"];
-        const allowedSortOrders = ["ASC", "DESC"];
         const queryConditions: any = {};
 
         // 分类筛选条件
