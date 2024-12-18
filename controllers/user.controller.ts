@@ -80,6 +80,32 @@ interface IActivationToken {
     activationCode: string;
 }
 
+export const addRegistratingToken = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
+
+        const {email} = req.body;
+
+        const expiresIn = 60 * 10;
+        redis.set(email, activationCode, "EX", expiresIn)
+
+        res.status(200).json({
+            success:true,
+            message: `已经允许${email}进行注册，以下是该邮箱的激活码`,
+            activationCode
+        })
+
+
+    } catch (error: any) {
+        next(new ErrorHandler(error.message, 400));
+    }
+})
+
+interface IActivationToken {
+    token: string;
+    activationCode: string;
+}
+
 export const createActivationToken = (user: any): IActivationToken => {
     const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
 
