@@ -5,11 +5,11 @@ SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0;
 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 
 -- -----------------------------------------------------
--- Schema erpv1.1
+-- Schema erpv1.0
 -- -----------------------------------------------------
 
 -- -----------------------------------------------------
--- Schema erpv1.1
+-- Schema erpv1.0
 -- -----------------------------------------------------
 CREATE SCHEMA IF NOT EXISTS `erpv1.0` DEFAULT CHARACTER SET utf8 ;
 USE `erpv1.0` ;
@@ -100,7 +100,7 @@ ENGINE = InnoDB;
 -- -----------------------------------------------------
 -- Table `erpv1.0`.`prodcuts_to_materials`
 -- -----------------------------------------------------
-CREATE TABLE IF NOT EXISTS `erpv1.0`.`prodcuts_to_materials` (
+CREATE TABLE IF NOT EXISTS `erpv1.0`.`produsts_to_materials` (
   `products_idproduct` VARCHAR(50) NOT NULL,
   `leaf_materials_drawing_no` VARCHAR(45) NOT NULL,
   `material_counts` INT NOT NULL,
