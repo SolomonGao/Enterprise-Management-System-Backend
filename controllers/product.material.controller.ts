@@ -4,8 +4,6 @@ import ErrorHandler from "../utils/ErrorHandler";
 import LeafMaterialModel from "../models/sql/leaf.materials.model";
 import { Op } from "sequelize";
 import ProductMaterialModel from "../models/sql/produict.material.model";
-import productRouter from "../routers/product.Router";
-import leafMateiralRouter from "../routers/leaf.mateiral.router";
 
 export const linkMaterialToProduct = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
