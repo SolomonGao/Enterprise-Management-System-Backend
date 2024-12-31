@@ -1,27 +1,38 @@
 import mongoose, { Model, Document, Schema, Date } from "mongoose";
 
+type Product = {
+    id: string;
+    quantity: number;
+};
+
+const ProductSchema: Schema<Product> = new mongoose.Schema({
+    id: {
+        type: String,
+        required: [true, "产品 ID 是必填项"],
+    },
+    quantity: {
+        type: Number,
+        required: [true, "产品数量是必填项"],
+        min: [1, "产品数量必须大于 0"],
+    },
+}, { _id: false });
 
 export interface IOrder extends Document {
-    productId: string;
-    counts: number;
+    products: Product[];
     comments: string;
     customer: string;
     address: string;
     phoneNumber: string;
     status: string;
-    deadline: number;
+    deadline: string;
     getdeadline:() => Promise<number>;
     version:number;
 }
 
 const OrderSchema: Schema<IOrder> = new mongoose.Schema({
-    productId: {
-        type: String,
-        required : [true, "请选择订单型号"],
-    },
-    counts: {
-        type: Number,
-        required : [true, "请输入产品数量"],
+    products: {
+        type: [ProductSchema],
+        required : [true, "请选择订单产品"],
     },
     comments: {
         type: String,
@@ -40,19 +51,18 @@ const OrderSchema: Schema<IOrder> = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: "未完成"
+        default: "初始"
     },
     deadline: {
-        type: Number,
+        type: String,
         required: [true, "请输入天数期限"]
     },
     
 }, {timestamps: true, versionKey: "__v"});
 
 OrderSchema.methods.getdeadline = async function(): Promise<number> {
-    const remainingMilliseconds = this.createdAt.getTime() ;
-    return Math.ceil(remainingMilliseconds / (1000 * 60 * 60 * 24)) + this.deadline;
-
+    
+    return 3;
 }
 
 const OrderModel: Model<IOrder> = mongoose.model("Order", OrderSchema);

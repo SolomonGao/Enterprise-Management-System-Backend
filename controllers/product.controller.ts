@@ -96,8 +96,6 @@ export const getProducts = CatchAsyncError(async (req: Request, res: Response, n
             order = "ASC",
             sortBy = "idproduct"
         } = req.query; // 获取分页参数，默认页码为 1，每页显示 6 个
-        console.log(search)
-        console.log(searchBy)
 
         const queryConditions: any = {};
         // 搜索条件
