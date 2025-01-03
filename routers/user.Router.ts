@@ -5,7 +5,7 @@ import { isAutheticated, authorizeRoles} from "../middlewares/auth";
 
 const userRouter = express.Router();
 
-userRouter.post("/registration", isAutheticated, authorizeRoles("管理"), registration); 
+userRouter.post("/registration", registration); 
 
 userRouter.post("/add-registrating-token", addRegistratingToken);
 

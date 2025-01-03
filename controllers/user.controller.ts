@@ -180,20 +180,20 @@ export const loginUser = CatchAsyncError(async (req: Request, res: Response, nex
  // 每个客户端都会生成一个唯一标识符。
 
         if (!email || !password) {
-            return next(new ErrorHandler("Please enter email and password", 400));
+            return next(new ErrorHandler("请输入用户名和密码", 400));
         }
 
         const user = await UserModel.findOne({ email }).select("+password");
 
         // console.log(user)
         if (!user) {
-            return next(new ErrorHandler("Invalid Email or password", 400));
+            return next(new ErrorHandler("用户名或密码错误，请重试", 400));
         }
 
         const isPasswordMatch = await user.comparePassword(password);
 
         if (!isPasswordMatch) {
-            return next(new ErrorHandler("Invalid password", 400));
+            return next(new ErrorHandler("密码错误，请重试", 400));
         }
 
         await sendToken(user, clientId, 200, res);
