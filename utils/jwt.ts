@@ -14,19 +14,19 @@ interface ITokenOptions {
 
 // parse enviroment variables to integrates with fallback values
 const accessTokenExpire = parseInt(process.env.ACCESS_TOKEN_EXPIRE || '3600', 10);
-const refreshTokenExpire = parseInt(process.env.REFRESH_TOKEN_EXPIRE || '7200', 10);
+const refreshTokenExpire = parseInt(process.env.REFRESH_TOKEN_EXPIRE || '3600', 10);
 
 export const accessTokenOptions: ITokenOptions = {
-    expires: new Date(Date.now() + accessTokenExpire * 60 * 60 * 1000),
-    maxAge: accessTokenExpire * 60 * 60 * 1000,
+    expires: new Date(Date.now() + accessTokenExpire * 3 * 60 * 60),
+    maxAge: accessTokenExpire * 3 * 60 * 60,
     httpOnly: true,
     sameSite: 'lax',
     // secure: true,
 };
 
 export const refreshTokenOptions: ITokenOptions = {
-    expires: new Date(Date.now() + refreshTokenExpire * 24 * 60 * 60 * 1000),
-    maxAge: refreshTokenExpire * 24 * 60 * 60 * 1000,
+    expires: new Date(Date.now() + refreshTokenExpire * 24 * 60 * 60),
+    maxAge: refreshTokenExpire * 24 * 60 * 60,
     httpOnly: true,
     sameSite: 'lax',
     // secure: true
@@ -41,7 +41,7 @@ if (process.env.NODE_ENV === 'production') {
 export const sendToken = async (user: IUser, clientId: string, statusCode: number, res: Response) => {
     const accessToken = user.SignAccessToken();
     const refreshToken = user.SignRefreshToken();
-    const expirationTimeInSeconds = 7200;
+    const expirationTimeInSeconds = 14400;
 
     const allKeys = await redis.keys(`session:${user._id}:*`);
 

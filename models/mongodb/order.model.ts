@@ -5,10 +5,33 @@ type Product = {
     quantity: number;
 };
 
+type Material = {
+    name: string;
+    drawing_no_id: string;
+    requiredQuantity: number;
+}
+
+const RequiredMaterialSchema: Schema<Material> = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true
+    },
+    drawing_no_id: {
+        type: String,
+        required: true,
+        unique: true
+    },
+    requiredQuantity: {
+        type: Number,
+        required: true
+    },
+}, { _id: false });
+
 const ProductSchema: Schema<Product> = new mongoose.Schema({
     id: {
         type: String,
         required: [true, "产品 ID 是必填项"],
+        unique: true
     },
     quantity: {
         type: Number,
@@ -25,29 +48,30 @@ export interface IOrder extends Document {
     phoneNumber: string;
     status: string;
     deadline: string;
-    getdeadline:() => Promise<number>;
-    version:number;
+    requiredMaterials: Material[]
+    getdeadline: () => Promise<number>;
+    version: number;
 }
 
 const OrderSchema: Schema<IOrder> = new mongoose.Schema({
     products: {
         type: [ProductSchema],
-        required : [true, "请选择订单产品"],
+        required: [true, "请选择订单产品"],
     },
     comments: {
         type: String,
     },
     customer: {
         type: String,
-        required : [true, "请输入客户公司名"],
+        required: [true, "请输入客户公司名"],
     },
     phoneNumber: {
         type: String,
-        required : [true, "请输入客户公司联系方式"],
+        required: [true, "请输入客户公司联系方式"],
     },
     address: {
         type: String,
-        required : [true, "请输入客户公司地址"],
+        required: [true, "请输入客户公司地址"],
     },
     status: {
         type: String,
@@ -57,11 +81,12 @@ const OrderSchema: Schema<IOrder> = new mongoose.Schema({
         type: String,
         required: [true, "请输入天数期限"]
     },
-    
-}, {timestamps: true, versionKey: "__v"});
+    requiredMaterials: [RequiredMaterialSchema], // 存储所需的零配件信息
 
-OrderSchema.methods.getdeadline = async function(): Promise<number> {
-    
+}, { timestamps: true, versionKey: "__v" });
+
+OrderSchema.methods.getdeadline = async function (): Promise<number> {
+
     return 3;
 }
 

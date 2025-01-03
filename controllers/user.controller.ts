@@ -265,7 +265,7 @@ export const updateAccessToken = CatchAsyncError(async (req: Request, res: Respo
         const user = JSON.parse(sessionInfo);
 
         const accessToken = jwt.sign({ id: user._id }, process.env.ACCESS_TOKEN as string, {
-            expiresIn: "30m",
+            expiresIn: "3h",
         })
 
         const refreshToken = jwt.sign({ id: user._id }, process.env.REFRESH_TOKEN as string, {
@@ -464,6 +464,7 @@ export const getgUserInfo = CatchAsyncError(async (req: Request, res: Response, 
     try {
         const userId = req.user?._id as string;
         const clientId = req.query["clientId"];
+        console.log(clientId)
 
         if (clientId !== undefined) {
             getUserById(userId, clientId as string, res, next);
@@ -473,7 +474,6 @@ export const getgUserInfo = CatchAsyncError(async (req: Request, res: Response, 
                 success: false
             })
         }
-        
     } catch (error: any) {
         next(new ErrorHandler(error.message, 400));
     }

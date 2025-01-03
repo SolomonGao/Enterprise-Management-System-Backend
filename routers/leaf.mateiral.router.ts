@@ -9,6 +9,6 @@ leafMateiralRouter.post("/add-material", isAutheticated, authorizeRoles("管理"
 leafMateiralRouter.get("/search", searchMaterialsById);
 
 leafMateiralRouter.get("/get-materials-by-root", isAutheticated, searchMaterialsByRoot);
-leafMateiralRouter.patch("/update-material-counts", isAutheticated, authorizeRoles("管理"), updateMaterialCounts); // 使用 PATCH 方法更新数量
+leafMateiralRouter.patch("/update-material-counts", isAutheticated, authorizeRoles("管理"), updateMaterialCounts);
 
 export default leafMateiralRouter;

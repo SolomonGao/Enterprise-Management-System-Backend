@@ -13,44 +13,94 @@ interface IOrderBody {
     deadline: string;
 }
 
-type product = {
-    productId: string;
+type Product = {
+    id: string;
     quantity: number;
-}
+};
+
 interface Products {
-    products: product[];
+    products: Product[];
 }
+
 export const createOrder = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {
-            comments,
-            customer,
-            address,
-            phoneNumber,
-            deadline
-        } = req.body.order as IOrderBody;
+        // 解构请求体
+        const { order, selectedProductsId }: { order: IOrderBody; selectedProductsId: Products } = req.body;
 
-        const { products } = req.body.selectedProductsId as Products;
+        // 验证必填字段
+        if (!order || !selectedProductsId || !selectedProductsId.products.length) {
+            return next(new ErrorHandler("订单信息或产品列表不能为空", 400));
+        }
 
+        const { comments, customer, address, phoneNumber, deadline } = order;
+        const { products } = selectedProductsId;
+
+        // 收集所有产品 ID 和数量
+        const productQuantities = products.reduce((acc, product) => {
+            acc[product.id] = product.quantity;
+            return acc;
+        }, {} as Record<string, number>);
+
+        // 验证产品字段
+        if (products.some(product => !product.id || product.quantity <= 0)) {
+            return next(new ErrorHandler("产品信息不完整或数量无效", 400));
+        }
+
+        // 一次性查询所有相关产品与配件的关联
+        const productMaterials = await ProductMaterialModel.findAll({
+            where: { products_idproduct: Object.keys(productQuantities) },
+            include: [{ model: LeafMaterialModel, as: 'leafMaterial' }]
+        });
+
+        // 使用 Map 聚合配件需求
+        const materialMap = new Map<string, any>();
+
+        for (const productMaterial of productMaterials) {
+            const material = productMaterial.leafMaterial;
+
+            if (!material) continue;
+
+            const materialId = material.drawing_no_id;
+            const productId = productMaterial.products_idproduct;
+            const productQuantity = productQuantities[productId] || 0;
+
+            if (!materialMap.has(materialId)) {
+                materialMap.set(materialId, {
+                    name: material.name,
+                    drawing_no_id: material.drawing_no_id,
+                    requiredQuantity: 0,
+                });
+            }
+
+            const materialData = materialMap.get(materialId);
+            materialData.requiredQuantity += productMaterial.material_counts * productQuantity;
+        }
+
+        // 转换 Map 为数组
+        const requiredMaterials = Array.from(materialMap.values());
+
+        // 创建订单，并存储零配件需求
         const newOrder = await OrderModel.create({
             products,
             comments,
             customer,
             address,
             phoneNumber,
-            deadline
-        })
+            deadline,
+            requiredMaterials, // 存储零配件需求
+        });
 
+        // 返回响应
         res.status(201).json({
             success: true,
-            newOrder
-        })
-
+            newOrder,
+        });
     } catch (error: any) {
-        return next(new ErrorHandler(error.message, 400));
+        return next(new ErrorHandler(error.message || "服务器错误", 500));
     }
+});
 
-})
+
 
 
 export const getAllOrders = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
@@ -252,7 +302,7 @@ export const useRequiredMaterials = CatchAsyncError(async (req: Request, res: Re
 
         // Batch update the inventory for all sufficient materials
         await Promise.all(
-            updates.map(update => 
+            updates.map(update =>
                 LeafMaterialModel.update(
                     { counts: update.newCounts },
                     { where: { drawing_no_id: update.id } }
