@@ -59,23 +59,30 @@ export const getAllOrders = CatchAsyncError(async (req: Request, res: Response, 
             page = 1,
             limit = 5,
             search,
-            searchBy = "id",
+            searchBy = "_id",
             order = "ASC",
-            sortBy = "id"
+            sortBy = "_id",
         } = req.query;
 
-        const pageNumber = parseInt(page as string);
-        const pageLimit = parseInt(limit as string);
-
+        // Parse and validate pagination parameters
+        const pageNumber = Math.max(1, parseInt(page as string) || 1); // Ensure page is at least 1
+        const pageLimit = Math.max(1, parseInt(limit as string) || 5); // Ensure limit is at least 1
         const skip = (pageNumber - 1) * pageLimit;
 
-        const searchFilter = search ? { [searchBy as any]: { $regex: search, $options: 'i' } } : {};
 
-        const sortOrder = order === 'DESC' ? -1 : 1;  // Sort order: -1 for descending, 1 for ascending
-        const sortQuery = { [sortBy as any]: sortOrder };
+        // Validate searchBy and sortBy fields
+        const allowedSearchFields = ["_id", "customer", "phoneNumber", "address", "deadline", "status"];
+        const allowedSortFields = ["_id", "createdAt", "updatedAt"];
+        const searchField = allowedSearchFields.includes(searchBy as string) ? searchBy : "_id";
+        const sortField = allowedSortFields.includes(sortBy as string) ? sortBy : "_id";
 
+        // Build search and sort queries
+        const searchFilter = search ? { [searchField as any]: { $regex: search, $options: "i" } } : {};
+        const sortOrder = order === "DESC" ? -1 : 1;
+        const sortQuery = { [sortField as any]: sortOrder };
+
+        // Query database
         const totalOrders = await OrderModel.countDocuments(searchFilter);
-
         const data = await OrderModel.find(searchFilter)
             .skip(skip)
             .limit(pageLimit)
@@ -84,13 +91,13 @@ export const getAllOrders = CatchAsyncError(async (req: Request, res: Response, 
         // Calculate total pages
         const totalPages = Math.ceil(totalOrders / pageLimit);
 
+        // Respond with paginated data
         res.status(200).json({
             success: true,
             data,
             currentPage: pageNumber,
             totalPages,
-            totalOrders
-
+            totalOrders,
         });
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 400));
@@ -131,7 +138,9 @@ export const changeStatus = CatchAsyncError(async (req: Request, res: Response, 
 
 export const getRequiredMaterials = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { products } = req.body; // [{ id: '改变vsear', quantity: 2 }, { id: '琐事缠身', quantity: 3 }]
+        const encodedProducts = req.query.products; // [{ id: '改变vsear', quantity: 2 }, { id: '琐事缠身', quantity: 3 }]
+
+        const products = JSON.parse(decodeURIComponent(encodedProducts as string));
 
         if (!products || !Array.isArray(products)) {
             return next(new ErrorHandler("该订单没有包含产品", 400));
@@ -164,7 +173,7 @@ export const getRequiredMaterials = CatchAsyncError(async (req: Request, res: Re
             if (!materialMap.has(materialId)) {
                 materialMap.set(materialId, {
                     name: material.name,
-                    drawingNo: material.drawing_no_id,
+                    drawing_no_id: material.drawing_no_id,
                     requiredQuantity: 0,
                     availableQuantity: material.counts,
                 });
@@ -180,6 +189,80 @@ export const getRequiredMaterials = CatchAsyncError(async (req: Request, res: Re
         res.status(200).json({
             success: true,
             data,
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+export const useRequiredMaterials = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { materials } = req.body;
+
+        if (!Array.isArray(materials) || materials.length === 0) {
+            return next(new ErrorHandler("没有传入正确的材料信息", 400));
+        }
+
+        // Store all insufficient materials for response
+        const insufficientMaterials: any[] = [];
+        const updates: any[] = [];
+
+        for (const material of materials) {
+            const { drawing_no_id, requiredQuantity } = material;
+
+            const foundMaterial = await LeafMaterialModel.findOne({ where: { drawing_no_id: drawing_no_id } });
+
+            if (!foundMaterial) {
+                // If material is not found in inventory
+                insufficientMaterials.push({
+                    drawing_no_id,
+                    name: material.drawingNo, // Assuming name is the same as drawingNo for simplicity
+                    requiredQuantity,
+                    availableQuantity: 0,
+                });
+                continue;
+            }
+
+            const availableQuantity = foundMaterial.counts;
+
+            if (availableQuantity < requiredQuantity) {
+                insufficientMaterials.push({
+                    drawing_no_id,
+                    name: foundMaterial.name,
+                    requiredQuantity,
+                    availableQuantity,
+                });
+            } else {
+                // Update the material's inventory
+                updates.push({
+                    id: foundMaterial.drawing_no_id,
+                    newCounts: availableQuantity - requiredQuantity,
+                });
+            }
+        }
+
+        if (insufficientMaterials.length > 0) {
+            // Return response with insufficient materials
+            return res.status(400).json({
+                success: false,
+                message: "库存不足",
+                insufficientMaterials,
+            });
+        }
+
+        // Batch update the inventory for all sufficient materials
+        await Promise.all(
+            updates.map(update => 
+                LeafMaterialModel.update(
+                    { counts: update.newCounts },
+                    { where: { drawing_no_id: update.id } }
+                )
+            )
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "订单配件需求已成功处理",
         });
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500));

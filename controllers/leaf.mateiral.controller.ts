@@ -119,6 +119,7 @@ export const searchMaterialsByRoot = CatchAsyncError(async (req: Request, res: R
             order = "ASC",
             sortBy = "name"
         } = req.query;
+        
 
         const queryConditions: any = {};
 
@@ -169,6 +170,40 @@ export const searchMaterialsByRoot = CatchAsyncError(async (req: Request, res: R
             totalPages
         });
 
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 400));
+    }
+});
+
+export const updateMaterialCounts = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { id, counts } = req.body;
+
+        // 验证输入
+        if (!id || counts === undefined) {
+            return next(new ErrorHandler("型号 (drawing_no_id) 和数量 (counts) 是必填项", 400));
+        }
+
+        // 查找该材料项
+        const material = await LeafMaterialModel.findOne({
+            where: { drawing_no_id: id }
+        });
+
+        if (!material) {
+            return next(new ErrorHandler("未找到该材料", 404));
+        }
+
+        // 更新材料的数量
+        material.counts = counts;
+
+        // 保存更新
+        await material.save();
+
+        res.status(200).json({
+            success: true,
+            message: `材料数量已更新为 ${counts}`,
+            material
+        });
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 400));
     }
