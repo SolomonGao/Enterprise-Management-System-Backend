@@ -302,8 +302,8 @@ export const resetPassword = CatchAsyncError(async (req: Request, res: Response,
     }
 
     const token = generateToken(email);
-    const resetLink = `http://localhost:3000/reset_password/${token}`;
-    const data = { user: { name: isEmailExist.name }, resetLink };
+    const resetToken = `${token}`;
+    const data = { user: { name: isEmailExist.name }, resetToken };
 
     try {
         await sendMail(
