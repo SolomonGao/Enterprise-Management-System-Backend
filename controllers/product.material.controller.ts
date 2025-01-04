@@ -87,6 +87,7 @@ export const getMaterialsByProduct = CatchAsyncError(async (req: Request, res: R
                         "name", // 获取原料名称
                         "counts", // 获取原料数量
                         "specification",
+                        "drawing_no_secure_url"
                     ], // 加载产品的名称和泵型号等
                 }
             ]

@@ -188,57 +188,51 @@ export const changeStatus = CatchAsyncError(async (req: Request, res: Response, 
 
 export const getRequiredMaterials = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const encodedProducts = req.query.products; // [{ id: '改变vsear', quantity: 2 }, { id: '琐事缠身', quantity: 3 }]
+        const encodedMaterials = req.query.materials;
 
-        const products = JSON.parse(decodeURIComponent(encodedProducts as string));
+        const materials = JSON.parse(decodeURIComponent(encodedMaterials as string));
 
-        if (!products || !Array.isArray(products)) {
-            return next(new ErrorHandler("该订单没有包含产品", 400));
+        if (!materials || !Array.isArray(materials)) {
+            return next(new ErrorHandler("该订单没有包含产品或者配件", 400));
         }
 
-        // 收集所有产品 ID 和数量
-        const productQuantities = products.reduce((acc, product) => {
-            acc[product.id] = product.quantity;
-            return acc;
-        }, {} as Record<string, number>);
-
-        // 一次性查询所有相关产品与配件的关联
-        const productMaterials = await ProductMaterialModel.findAll({
-            where: { products_idproduct: Object.keys(productQuantities) },
-            include: [{ model: LeafMaterialModel, as: 'leafMaterial' }]
+        // 从数据库中查找匹配的材料
+        const materialIds = materials.map((item: any) => item.drawing_no_id);
+        const materialDocs = await LeafMaterialModel.findAll({
+            where: {
+                drawing_no_id: materialIds
+            }
         });
 
-        // 使用 Map 聚合配件需求
-        const materialMap = new Map<string, any>();
-
-        for (const productMaterial of productMaterials) {
-            const material = productMaterial.leafMaterial;
-
-            if (!material) continue;
-
-            const materialId = material.drawing_no_id;
-            const productId = productMaterial.products_idproduct;
-            const productQuantity = productQuantities[productId] || 0;
-
-            if (!materialMap.has(materialId)) {
-                materialMap.set(materialId, {
-                    name: material.name,
-                    drawing_no_id: material.drawing_no_id,
-                    requiredQuantity: 0,
-                    availableQuantity: material.counts,
-                });
-            }
-
-            const materialData = materialMap.get(materialId);
-            materialData.requiredQuantity += productMaterial.material_counts * productQuantity;
+        // 如果没有匹配的材料，返回错误
+        if (!materialDocs.length) {
+            return next(new ErrorHandler("未找到匹配的材料", 404));
         }
 
-        // 转换 Map 为数组
-        const data = Array.from(materialMap.values());
+        // 将数据库返回的数据与请求中的数量合并
+        const requiredMaterials = materials.map((item: any) => {
+            const matchedMaterial = materialDocs.find(
+                (doc) => doc.drawing_no_id === item.drawing_no_id
+            );
 
+            if (!matchedMaterial) {
+                return { id: item.id, error: "未找到匹配的材料" };
+            }
+
+            return {
+                name: matchedMaterial.name,
+                drawing_no_id: matchedMaterial.drawing_no_id,
+                specification: matchedMaterial.specification,
+                requiredQuantity: item.requiredQuantity,
+                availableQuantity: matchedMaterial.counts,
+                image: matchedMaterial.drawing_no_secure_url,
+            };
+        });
+
+        // 返回成功响应
         res.status(200).json({
             success: true,
-            data,
+            data: requiredMaterials,
         });
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500));
