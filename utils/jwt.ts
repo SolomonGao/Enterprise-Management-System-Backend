@@ -73,19 +73,30 @@ export const generateToken = (email: string): string => {
     return jwt.sign({ email }, process.env.RESET_PASSWORD_SECRET as Secret, { expiresIn: '30m' });
 }
 
-export const savePasswordResetToken = (token: string, email: string) => {
-    const expiresIn = 60 * 10;
+export const savePasswordResetToken = async (token: string, email: string): Promise<void> => {
+    const expiresIn = 60 * 10; // Token 有效时间 10 分钟
     const key = `${token}=`;
-    redis.set(key, email, "EX", expiresIn);
-}
-
-export const verifyPasswordResetToken = (token: string): Promise<string | null> => {
-    const key = `${token}`;
-    const email = redis.get(key); // 获取邮箱
-    return email; // 如果 token 无效或过期，将返回 null
+    await redis.set(key, email, "EX", expiresIn); // 使用 await 等待 set 操作完成
 };
 
-export const deletePasswordResetToken = (token: string) => {
-    const key = `${token}`;
-    redis.del(key); // 删除键
+export const verifyPasswordResetToken = async (token: string): Promise<string | null> => {
+    const key = `${token}=`;
+
+    try {
+        const email = await redis.get(key); // 异步获取邮箱
+
+        if (email) {
+            return email; // 如果找到邮箱，返回邮箱
+        } else {
+            return null; // 如果没有找到邮箱，返回 null
+        }
+    } catch (error) {
+        console.error("Error getting email from Redis:", error);
+        return null; // 如果发生错误，也返回 null
+    }
+};
+
+export const deletePasswordResetToken = async (token: string): Promise<void> => {
+    const key = `${token}=`;
+    await redis.del(key); // 删除键，使用 await 等待操作完成
 };

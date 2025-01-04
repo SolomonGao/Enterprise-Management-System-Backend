@@ -84,13 +84,13 @@ export const addRegistratingToken = CatchAsyncError(async (req: Request, res: Re
     try {
         const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
 
-        const {email} = req.body;
+        const { email } = req.body;
 
         const expiresIn = 60 * 10;
         redis.set(email, activationCode, "EX", expiresIn)
 
         res.status(200).json({
-            success:true,
+            success: true,
             message: `已经允许${email}进行注册，以下是该邮箱的激活码`,
             activationCode
         })
@@ -177,7 +177,7 @@ export const loginUser = CatchAsyncError(async (req: Request, res: Response, nex
     try {
         const { email, password, clientId } = req.body as ILoginRequest;
 
- // 每个客户端都会生成一个唯一标识符。
+        // 每个客户端都会生成一个唯一标识符。
 
         if (!email || !password) {
             return next(new ErrorHandler("请输入用户名和密码", 400));
@@ -324,6 +324,7 @@ export const resetPassword = CatchAsyncError(async (req: Request, res: Response,
         res.status(201).json({
             success: true,
             message: `请检查邮箱来重置${isEmailExist.name}的密码`,
+            token
         })
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 400));
@@ -332,11 +333,46 @@ export const resetPassword = CatchAsyncError(async (req: Request, res: Response,
 })
 
 
+export const verifyResetPasswordToken = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { token, email } = req.query;
+
+        // 确保 token 存在
+        if (!token) {
+            return next(new ErrorHandler('没有找到令牌', 400));
+        }
+
+        // 验证令牌并解码邮箱
+        const decodedEmail = await verifyPasswordResetToken(token as string);
+
+        // 令牌无效
+        if (!decodedEmail) {
+            return next(new ErrorHandler('令牌失效，请重试', 400));
+        }
+
+        // 邮箱不匹配
+        if (email !== decodedEmail) {
+            return next(new ErrorHandler('令牌中监测到的邮箱和上方邮箱不一致，请重试', 400));
+        }
+
+        // 返回成功信息
+        res.status(200).json({
+            success: true,
+            email,
+            token
+        });
+
+    } catch (error: any) {
+        // 处理未捕获的错误
+        console.error(error);
+        return next(new ErrorHandler(error.message || '服务器错误', 500));
+    }
+});
+
+
 export const postResetPassword = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-    const { password } = req.body;
 
-    const { token } = req.query as any;
-
+    const { password, token } = req.body;
 
     if (!token || !password) {
         return next(new ErrorHandler('没有找到密码和令牌', 400));
@@ -346,7 +382,6 @@ export const postResetPassword = CatchAsyncError(async (req: Request, res: Respo
     try {
         const email = await verifyPasswordResetToken(token);
         if (!email) {
-            await deletePasswordResetToken(token);
             return next(new ErrorHandler('令牌失效，请重试', 400));
         }
 
@@ -354,7 +389,6 @@ export const postResetPassword = CatchAsyncError(async (req: Request, res: Respo
         const user = await userModel.findOne({ email }) as IUser;
         const result = await updatePassword(user._id as string, password)
         if (!result) {
-            await deletePasswordResetToken(token);
             return next(new ErrorHandler("出现错误，请重试", 400));
         }
 
@@ -370,7 +404,6 @@ export const postResetPassword = CatchAsyncError(async (req: Request, res: Respo
             if (user) {
                 redis.del(decoded.id);
             }
-
         }
 
         // 删除 Redis 中的令牌
@@ -380,7 +413,6 @@ export const postResetPassword = CatchAsyncError(async (req: Request, res: Respo
             message: '更改密码成功'
         });
     } catch (error: any) {
-        await deletePasswordResetToken(token);
         return next(new ErrorHandler(error.message, 400));
     }
 });
@@ -388,7 +420,7 @@ export const postResetPassword = CatchAsyncError(async (req: Request, res: Respo
 
 export const updateProfilePicture = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        
+
         const { avatar } = req.body;
         const userId = req.user?._id;
 

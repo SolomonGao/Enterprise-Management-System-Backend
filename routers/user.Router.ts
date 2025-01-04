@@ -1,5 +1,5 @@
 import express from "express";
-import {registration, activateUser, loginUser, resetPassword, postResetPassword, logoutUser, updateAccessToken, getgUserInfo, updateProfilePicture, getAllUsers, updateUserRole, updateUserInfo, changePassword, addRegistratingToken} from "../controllers/user.controller";
+import {registration, activateUser, loginUser, resetPassword, postResetPassword, logoutUser, updateAccessToken, getgUserInfo, updateProfilePicture, getAllUsers, updateUserRole, updateUserInfo, changePassword, addRegistratingToken, verifyResetPasswordToken} from "../controllers/user.controller";
 import { isAutheticated, authorizeRoles} from "../middlewares/auth";
 
 
@@ -14,6 +14,8 @@ userRouter.post("/activation", activateUser);
 userRouter.post("/login", loginUser);
 
 userRouter.post("/reset-password", resetPassword);
+
+userRouter.get('/verify-reset-password-token', verifyResetPasswordToken);
 
 userRouter.post("/post-reset-password", postResetPassword);
 
@@ -32,6 +34,7 @@ userRouter.put("/update-user-role", isAutheticated, authorizeRoles("管理"), up
 userRouter.put("/edit-profile",  isAutheticated, updateUserInfo);
 
 userRouter.put("/change-password",  isAutheticated, changePassword); 
+
 
 
 
