@@ -324,7 +324,6 @@ export const resetPassword = CatchAsyncError(async (req: Request, res: Response,
         res.status(201).json({
             success: true,
             message: `请检查邮箱来重置${isEmailExist.name}的密码`,
-            token
         })
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 400));
@@ -359,7 +358,6 @@ export const verifyResetPasswordToken = CatchAsyncError(async (req: Request, res
         res.status(200).json({
             success: true,
             email,
-            token
         });
 
     } catch (error: any) {
