@@ -5,7 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "ts-node-dev --respawn --transpile-only server.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy",
+    "copy": "copyfiles -u 1 mails/**/*.ejs dist/mails",
     "start": "node dist/app.js"
   },
   "author": "Xing Gao",
@@ -42,6 +43,7 @@
     "uuid": "^11.0.3"
   },
   "devDependencies": {
-    "@types/express-myconnection": "^1.0.37"
+    "@types/express-myconnection": "^1.0.37",
+    "copyfiles": "^2.4.1"
   }
 }
