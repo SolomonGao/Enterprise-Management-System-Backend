@@ -108,5 +108,19 @@
     /* Completeness */
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true                                 /* Skip type checking all .d.ts files. */
-  }
+  },
+    "include": [
+    "@types/**/*.ts",
+    "server.ts",                             // 包括入口文件
+    "app.ts",                                // 包括 app 文件
+    "controllers/**/*.ts",                   // 包括 controllers 文件夹中的所有 .ts 文件
+    "db/**/*.ts",                            // 包括 db 文件夹中的所有 .ts 文件
+    "mails/**/*.ts",                         // 包括 mails 文件夹中的所有 .ts 文件
+    "middlewares/**/*.ts",                   // 包括 middlewares 文件夹中的所有 .ts 文件
+    "models/**/*.ts",                        // 包括 models 文件夹中的所有 .ts 文件
+    "routers/**/*.ts",                       // 包括 routers 文件夹中的所有 .ts 文件
+    "services/**/*.ts",                      // 包括 services 文件夹中的所有 .ts 文件
+    "utils/**/*.ts"                          // 包括 utils 文件夹中的所有 .ts 文件
+  ],
+  "exclude": ["node_modules"]
 }
