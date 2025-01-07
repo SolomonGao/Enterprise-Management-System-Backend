@@ -21,7 +21,7 @@ export const accessTokenOptions: ITokenOptions = {
     maxAge: accessTokenExpire * 3 * 60 * 60,
     httpOnly: true,
     sameSite: 'lax',
-    secure: true,
+    // secure: true,
 };
 
 export const refreshTokenOptions: ITokenOptions = {
@@ -29,7 +29,7 @@ export const refreshTokenOptions: ITokenOptions = {
     maxAge: refreshTokenExpire * 24 * 60 * 60,
     httpOnly: true,
     sameSite: 'lax',
-    secure: true
+    // secure: true
 };
 
 // only set secure to true in production
