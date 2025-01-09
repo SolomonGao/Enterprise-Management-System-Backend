@@ -15,7 +15,37 @@ import cloudinary from "cloudinary";
 import { getUserById, updatePassword } from "../services/user.service";
 import { Session } from "inspector/promises";
 
+export const addUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { email } = req.body;
 
+        const isEmailExist = await UserModel.findOne({ email });
+
+        if (isEmailExist) {
+            return next(new ErrorHandler("邮箱已经被注册", 400));
+        }
+
+        res.status(201).json({
+            success: true,
+            token,
+        });
+    } catch (error: any) {
+        next(new ErrorHandler(error.message, 400));
+    }
+}
+);
+
+export const createInvitationCode = (user: any): IActivationToken => {
+    const activationCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+    const token = jwt.sign(
+        { user, activationCode },
+        process.env.INVATATION_SECRET as Secret,
+        { expiresIn: "5m", }
+    );
+
+    return { token, activationCode };
+}
 interface IRegistrationBody {
     name: string;
     email: string;
@@ -30,7 +60,7 @@ export const registration = CatchAsyncError(async (req: Request, res: Response, 
         const isEmailExist = await UserModel.findOne({ email });
 
         if (isEmailExist) {
-            return next(new ErrorHandler("邮箱重复", 400));
+            return next(new ErrorHandler("邮箱已经被注册", 400));
         }
 
         const user: IRegistrationBody = {
