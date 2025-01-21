@@ -4,8 +4,6 @@ import userModel, { IUser } from "../models/mongodb/user.model";
 import ErrorHandler from "../utils/ErrorHandler";
 import { CatchAsyncError } from "../middlewares/catchAsyncErrors";
 import jwt, { JwtPayload, Secret } from "jsonwebtoken";
-import ejs, { Template } from "ejs";
-import { v4 as uuidv4 } from "uuid";
 import sendMail from "../utils/sendMail";
 // import { sendToken, accessTokenOptions, refreshTokenOptions } from "../utils/jwt";
 import { redis } from "../utils/redis";
@@ -13,7 +11,6 @@ import UserModel from "../models/mongodb/user.model";
 import { accessTokenOptions, deletePasswordResetToken, generateToken, refreshTokenOptions, savePasswordResetToken, sendToken, verifyPasswordResetToken } from "../utils/jwt";
 import cloudinary from "cloudinary";
 import { getUserById, updatePassword } from "../services/user.service";
-import { Session } from "inspector/promises";
 
 export const addUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -25,9 +22,12 @@ export const addUser = CatchAsyncError(async (req: Request, res: Response, next:
             return next(new ErrorHandler("邮箱已经被注册", 400));
         }
 
+        const invitationCode = await createInvitationCode(email);
+
         res.status(201).json({
             success: true,
-            token,
+            message: "邀请成功",
+            invitationCode,
         });
     } catch (error: any) {
         next(new ErrorHandler(error.message, 400));
@@ -35,16 +35,14 @@ export const addUser = CatchAsyncError(async (req: Request, res: Response, next:
 }
 );
 
-export const createInvitationCode = (user: any): IActivationToken => {
-    const activationCode = Math.floor(100000 + Math.random() * 900000).toString();
+export const createInvitationCode = async (email: any) => {
+    const invitationCode = Math.floor(100000 + Math.random() * 900000).toString();
 
-    const token = jwt.sign(
-        { user, activationCode },
-        process.env.INVATATION_SECRET as Secret,
-        { expiresIn: "5m", }
-    );
+    const expirationTimeInSeconds = 300;
 
-    return { token, activationCode };
+    await redis.set(email, JSON.stringify(invitationCode), 'EX', expirationTimeInSeconds)
+
+    return invitationCode;
 }
 interface IRegistrationBody {
     name: string;
@@ -55,9 +53,10 @@ interface IRegistrationBody {
 
 export const registration = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email, name, password } = req.body;
+        const { email, name, password, invitationCode } = req.body;
 
         const isEmailExist = await UserModel.findOne({ email });
+
 
         if (isEmailExist) {
             return next(new ErrorHandler("邮箱已经被注册", 400));
@@ -110,26 +109,6 @@ interface IActivationToken {
     activationCode: string;
 }
 
-export const addRegistratingToken = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
-    try {
-        const activationCode = Math.floor(1000 + Math.random() * 9000).toString();
-
-        const { email } = req.body;
-
-        const expiresIn = 60 * 10;
-        redis.set(email, activationCode, "EX", expiresIn)
-
-        res.status(200).json({
-            success: true,
-            message: `已经允许${email}进行注册，以下是该邮箱的激活码`,
-            activationCode
-        })
-
-
-    } catch (error: any) {
-        next(new ErrorHandler(error.message, 400));
-    }
-})
 
 interface IActivationToken {
     token: string;

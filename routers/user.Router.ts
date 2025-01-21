@@ -1,13 +1,13 @@
 import express from "express";
-import {registration, activateUser, loginUser, resetPassword, postResetPassword, logoutUser, updateAccessToken, getgUserInfo, updateProfilePicture, getAllUsers, updateUserRole, updateUserInfo, changePassword, addRegistratingToken, verifyResetPasswordToken} from "../controllers/user.controller";
+import {registration, activateUser, loginUser, resetPassword, postResetPassword, logoutUser, updateAccessToken, getgUserInfo, updateProfilePicture, getAllUsers, updateUserRole, updateUserInfo, changePassword, verifyResetPasswordToken, addUser} from "../controllers/user.controller";
 import { isAutheticated, authorizeRoles} from "../middlewares/auth";
 
 
 const userRouter = express.Router();
 
-userRouter.post("/registration", registration); 
+userRouter.post("/add-user", isAutheticated, authorizeRoles("管理"), addUser);
 
-userRouter.post("/add-registrating-token", addRegistratingToken);
+userRouter.post("/registration", registration); 
 
 userRouter.post("/activation", activateUser);
 
