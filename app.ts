@@ -20,7 +20,7 @@ app.use(cookieParser());
 // }));
 
 // 只允许前端域名访问
-const allowedOrigins = process.env.ORIGIN;
+const allowedOrigins = process.env.ORIGIN || "";
 
 app.use(cors({
   origin: (origin, callback) => {
