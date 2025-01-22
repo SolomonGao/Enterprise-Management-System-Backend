@@ -14,9 +14,23 @@ require('dotenv').config();
 app.use(express.json({limit: '50mb'}));
 app.use(cookieParser());
 
+// app.use(cors({
+//     origin: process.env.ORIGIN,
+//     credentials: true
+// }));
+
+// 只允许前端域名访问
+const allowedOrigins = process.env.ORIGIN;
+
 app.use(cors({
-    origin: process.env.ORIGIN,
-    credentials: true
+  origin: (origin, callback) => {
+    if (allowedOrigins.includes(origin || '')) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true, // 如果需要传递 cookie
 }));
 
 app.get("/test", (req: Request, res: Response, next: NextFunction) => {
