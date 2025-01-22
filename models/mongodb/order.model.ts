@@ -19,7 +19,6 @@ const RequiredMaterialSchema: Schema<Material> = new mongoose.Schema({
     drawing_no_id: {
         type: String,
         required: true,
-        unique: true
     },
     requiredQuantity: {
         type: Number,
@@ -31,7 +30,6 @@ const ProductSchema: Schema<Product> = new mongoose.Schema({
     id: {
         type: String,
         required: [true, "产品 ID 是必填项"],
-        unique: true
     },
     quantity: {
         type: Number,
@@ -75,11 +73,11 @@ const OrderSchema: Schema<IOrder> = new mongoose.Schema({
     },
     status: {
         type: String,
-        default: "初始"
+        default: "初始",
     },
     deadline: {
         type: String,
-        required: [true, "请输入天数期限"]
+        required: [true, "请输入天数期限"],
     },
     requiredMaterials: [RequiredMaterialSchema], // 存储所需的零配件信息
 

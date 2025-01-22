@@ -11,6 +11,7 @@ import UserModel from "../models/mongodb/user.model";
 import { accessTokenOptions, deletePasswordResetToken, generateToken, refreshTokenOptions, savePasswordResetToken, sendToken, verifyPasswordResetToken } from "../utils/jwt";
 import cloudinary from "cloudinary";
 import { getUserById, updatePassword } from "../services/user.service";
+import { console } from "inspector";
 
 export const addUser = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
@@ -24,11 +25,28 @@ export const addUser = CatchAsyncError(async (req: Request, res: Response, next:
 
         const invitationCode = await createInvitationCode(email);
 
-        res.status(201).json({
-            success: true,
-            message: "邀请成功",
-            invitationCode,
-        });
+        const data = { email, invitationCode };
+
+        try {
+            await sendMail(
+                {
+                    email: email,
+                    subject: "注册邀请",
+                    template: "invitation-mail.ejs",
+                    data,
+                }
+            )
+
+
+            res.status(201).json({
+                success: true,
+                message: `邀请用户${email}成功`,
+                invitationCode,
+            });
+        } catch (error: any) {
+            next(new ErrorHandler(error.message, 400));
+        }
+
     } catch (error: any) {
         next(new ErrorHandler(error.message, 400));
     }
@@ -53,13 +71,23 @@ interface IRegistrationBody {
 
 export const registration = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { email, name, password, invitationCode } = req.body;
+        const { email, name, password, token } = req.body;
 
         const isEmailExist = await UserModel.findOne({ email });
 
-
         if (isEmailExist) {
             return next(new ErrorHandler("邮箱已经被注册", 400));
+        }
+
+        const invitationCode = JSON.parse(await redis.get(email) as string);
+
+        if (!invitationCode) {
+            return next(new ErrorHandler("该邮箱没有被邀请", 400));
+        }
+
+
+        if (invitationCode !== token) {
+            return next(new ErrorHandler(`${invitationCode} ${token}`, 400));
         }
 
         const user: IRegistrationBody = {
@@ -281,8 +309,6 @@ export const updateAccessToken = CatchAsyncError(async (req: Request, res: Respo
             expiresIn: "7d",
         })
 
-        const expirationTimeInSeconds = 300;
-
         // // upload session to redis
         // await redis.set(`session:${user._id}:${clientId}`, JSON.stringify(user), "EX", expirationTimeInSeconds);
 
@@ -503,7 +529,7 @@ export const getgUserInfo = CatchAsyncError(async (req: Request, res: Response, 
     try {
         const userId = req.user?._id as string;
         const clientId = req.query["clientId"];
-        console.log(clientId)
+        // console.log(clientId)
 
         if (clientId !== undefined) {
             getUserById(userId, clientId as string, res, next);

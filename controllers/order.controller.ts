@@ -18,7 +18,7 @@ type Product = {
     quantity: number;
 };
 
-interface Products {
+type Products = {
     products: Product[];
 }
 
@@ -37,9 +37,11 @@ export const createOrder = CatchAsyncError(async (req: Request, res: Response, n
 
         // 收集所有产品 ID 和数量
         const productQuantities = products.reduce((acc, product) => {
-            acc[product.id] = product.quantity;
+            if (product.id && product.quantity > 0) {
+              acc[product.id] = product.quantity;
+            }
             return acc;
-        }, {} as Record<string, number>);
+          }, {} as Record<string, number>);
 
         // 验证产品字段
         if (products.some(product => !product.id || product.quantity <= 0)) {
