@@ -12,6 +12,7 @@ export interface IProduct {
     drawing_no_public_id?: string,
     drawing_no_secure_url?: string,
     version: number;
+    finished_products: number;
 }
 
 
@@ -69,6 +70,12 @@ export default class ProductModel extends Model<IProduct> {
         type: DataType.INTEGER,
     })
     version!: number;
+
+    @Column({
+        type: DataType.NUMBER,
+        allowNull: true
+    })
+    finished_products?: number;
 
     @BelongsToMany(() => LeafMaterialModel, () => ProductMaterialModel, 'products_idproduct', 'leaf_materials_drawing_no')
     leafMaterials?: LeafMaterialModel[];

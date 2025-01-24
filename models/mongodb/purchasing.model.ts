@@ -26,6 +26,7 @@ export interface IPurchasing extends Document {
     authorizer: string;
     orderDeadline: string;
     status: string;
+    operator: string;
 }
 
 const PurchasingSchema: Schema<IPurchasing> = new mongoose.Schema({
@@ -42,6 +43,10 @@ const PurchasingSchema: Schema<IPurchasing> = new mongoose.Schema({
     status:{
         type: String,
         default: "初始",
+    },
+    operator: {
+        type: String,
+        default: "",
     }
 
 })

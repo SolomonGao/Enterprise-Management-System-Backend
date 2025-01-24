@@ -62,6 +62,7 @@ export const createleafMateiral = CatchAsyncError(async (req: Request, res: Resp
             drawing_no_id,
             drawing_no_public_id,
             drawing_no_secure_url,
+            purchasing: 0,
             version: 0
         })
 
@@ -190,7 +191,7 @@ export const updateMaterialCounts = CatchAsyncError(async (req: Request, res: Re
         });
 
         if (!material) {
-            return next(new ErrorHandler("未找到该材料", 404));
+            return next(new ErrorHandler("未找到该材料", 400));
         }
 
         // 更新材料的数量

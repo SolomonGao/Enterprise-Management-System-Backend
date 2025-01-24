@@ -8,6 +8,7 @@ import productRouter from "./routers/product.Router";
 import leafMateiralRouter from "./routers/leaf.mateiral.router";
 import rootMateiralRouter from "./routers/root.mateiral.router";
 import orderRouter from "./routers/order.router";
+import purchasingRouter from "./routers/purchasing.router";
 require('dotenv').config();
 
 
@@ -45,6 +46,7 @@ app.use("/api/v1/product", productRouter);
 app.use("/api/v1/leaf", leafMateiralRouter);
 app.use("/api/v1/root", rootMateiralRouter);
 app.use("/api/v1/order", orderRouter);
+app.use("/api/v1/purchasing", purchasingRouter);
 
 
 

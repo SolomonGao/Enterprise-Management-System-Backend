@@ -49,6 +49,7 @@ export const addProduct = CatchAsyncError(async (req: Request, res: Response, ne
             manufacturer: manufacturer,
             drawing_no_public_id,
             drawing_no_secure_url,  // Store the image data as a Blob in the database
+            finished_products: 0,
             version: 0
         });
 
@@ -71,7 +72,7 @@ export const deleteProduct = CatchAsyncError(async (req: Request, res: Response,
         const product = await ProductModel.findByPk(idProduct);
 
         if (!product) {
-            return next(new ErrorHandler("产品不存在", 404));  // 如果产品不存在，返回404错误
+            return next(new ErrorHandler("产品不存在", 400));
         }
 
         // 删除产品

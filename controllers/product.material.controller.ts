@@ -87,7 +87,9 @@ export const getMaterialsByProduct = CatchAsyncError(async (req: Request, res: R
                         "name", // 获取原料名称
                         "counts", // 获取原料数量
                         "specification",
-                        "drawing_no_secure_url"
+                        "drawing_no_secure_url",
+                        "purchasing",
+                        "version"
                     ], // 加载产品的名称和泵型号等
                 }
             ]
@@ -99,7 +101,7 @@ export const getMaterialsByProduct = CatchAsyncError(async (req: Request, res: R
 
         // 如果没有找到相关的材料数据
         if (materials.length === 0) {
-            return res.status(404).json({ message: "没有找到该产品对应的零配件数据。" });
+            return res.status(400).json({ message: "没有找到该产品对应的零配件数据。" });
         }
 
         // 返回找到的所有材料数据

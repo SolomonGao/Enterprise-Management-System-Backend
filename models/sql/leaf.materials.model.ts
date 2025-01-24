@@ -14,6 +14,7 @@ interface ILeafMaterial {
     drawing_no_secure_url?: string,
     comments: string;
     counts: number;
+    purchasing: number;
     name: string;
     specification: string;
     root_materials_idroot_materials: number;
@@ -45,6 +46,9 @@ export default class LeafMaterialModel extends Model<ILeafMaterial> {
   
     @Column(DataType.INTEGER)
     counts!: number;
+
+    @Column(DataType.INTEGER)
+    purchasing!: number;
   
     @Column(DataType.STRING)
     specification?: string;

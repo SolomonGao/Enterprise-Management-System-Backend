@@ -208,7 +208,7 @@ export const getRequiredMaterials = CatchAsyncError(async (req: Request, res: Re
 
         // 如果没有匹配的材料，返回错误
         if (!materialDocs.length) {
-            return next(new ErrorHandler("未找到匹配的材料", 404));
+            return next(new ErrorHandler("未找到匹配的材料", 400));
         }
 
         // 将数据库返回的数据与请求中的数量合并
@@ -228,6 +228,8 @@ export const getRequiredMaterials = CatchAsyncError(async (req: Request, res: Re
                 requiredQuantity: item.requiredQuantity,
                 availableQuantity: matchedMaterial.counts,
                 image: matchedMaterial.drawing_no_secure_url,
+                purchasing: matchedMaterial.purchasing,
+                version: matchedMaterial.version,
             };
         });
 
