@@ -569,7 +569,7 @@ export const updateUserRole = CatchAsyncError(async (req: Request, res: Response
         const { userId, newRole } = req.body;
 
         // 验证新的角色
-        const allowedRoles = ['员工', '管理'];
+        const allowedRoles = ['员工', '管理', '采购'];
         if (!allowedRoles.includes(newRole)) {
             return next(new ErrorHandler('无效的角色', 400));
         }
