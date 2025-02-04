@@ -15,17 +15,14 @@ require('dotenv').config();
 app.use(express.json({limit: '50mb'}));
 app.use(cookieParser());
 
-// app.use(cors({
-//     origin: process.env.ORIGIN,
-//     credentials: true
-// }));
 
 // 只允许前端域名访问
-const allowedOrigins = process.env.ORIGIN || "";
+const allowedOrigins = process.env.ORIGIN ? process.env.ORIGIN.split(",") : [];
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (allowedOrigins.includes(origin || '')) {
+    console.log('Request Origin:', origin);  // 打印出请求的 origin
+    if (allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
       callback(new Error('Not allowed by CORS'));
@@ -33,6 +30,7 @@ app.use(cors({
   },
   credentials: true, // 如果需要传递 cookie
 }));
+
 
 app.get("/test", (req: Request, res: Response, next: NextFunction) => {
     res.status(200).json({
