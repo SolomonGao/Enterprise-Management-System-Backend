@@ -9,6 +9,10 @@ import leafMateiralRouter from "./routers/leaf.mateiral.router";
 import rootMateiralRouter from "./routers/root.mateiral.router";
 import orderRouter from "./routers/order.router";
 import purchasingRouter from "./routers/purchasing.router";
+
+const fs = require('fs'); // 引入 fs 模块
+const path = require('path'); // 引入 path 模块，便于处理文件路径
+
 require('dotenv').config();
 
 
@@ -22,12 +26,22 @@ const allowedOrigins = process.env.ORIGIN ? process.env.ORIGIN.split(",") : [];
 app.use(cors({
   origin: (origin, callback) => {
     console.log('Request Origin:', origin);  // 打印出请求的 origin
+    const currentDate = new Date().toISOString();  // 获取当前日期时间
+    const logMessage = `${currentDate} - Origin: ${origin}\n`;
+
+        // 将日志写入文件
+    fs.appendFile(path.join(__dirname, 'access_log.txt'), logMessage, (err: NodeJS.ErrnoException | null) => {
+      if (err) {
+        console.error('Error writing to log file:', err);
+      }
+    });
+    
     if (!origin) {
       // 如果没有设置允许的源，拒绝所有跨域请求
       callback(new Error('Not allowed by CORS'));
     }
     else if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
+      callback(null, origin);
     } else {
       callback(new Error('Not allowed by CORS'));
     }
