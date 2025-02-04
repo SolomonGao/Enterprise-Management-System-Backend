@@ -20,6 +20,29 @@ app.use(express.json({limit: '50mb'}));
 app.use(cookieParser());
 
 
+app.set('trust proxy', true); // 如果部署在代理服务器后需要这行
+
+// 全局访问日志中间件
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const currentDate = new Date().toISOString();
+  const origin = req.headers.origin || 'none';
+  const ip = req.ip; // 会自动处理代理情况
+  
+  // 从 headers 中获取更多信息（可选）
+  const userAgent = req.headers['user-agent'] || 'unknown';
+  
+  const logMessage = `${currentDate} - IP: ${ip} - Origin: ${origin} - UA: ${userAgent}\n`;
+
+  fs.appendFile(path.join(__dirname, 'access_log.txt'), logMessage, (err: NodeJS.ErrnoException | null) => {
+    if (err) {
+      console.error('Error writing to log file:', err);
+    }
+  });
+  
+  next();
+});
+
+
 // 只允许前端域名访问
 const allowedOrigins = process.env.ORIGIN ? process.env.ORIGIN.split(",") : [];
 
@@ -29,13 +52,6 @@ app.use(cors({
     const currentDate = new Date().toISOString();  // 获取当前日期时间
     const logMessage = `${currentDate} - Origin: ${origin}\n`;
 
-        // 将日志写入文件
-    fs.appendFile(path.join(__dirname, 'access_log.txt'), logMessage, (err: NodeJS.ErrnoException | null) => {
-      if (err) {
-        console.error('Error writing to log file:', err);
-      }
-    });
-    
     if (!origin) {
       // 如果没有设置允许的源，拒绝所有跨域请求
       callback(new Error('Not allowed by CORS'));
