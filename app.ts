@@ -22,7 +22,7 @@ const allowedOrigins = process.env.ORIGIN ? process.env.ORIGIN.split(",") : [];
 app.use(cors({
   origin: (origin, callback) => {
     console.log('Request Origin:', origin);  // 打印出请求的 origin
-    if (!allowedOrigins.length) {
+    if (!origin) {
       // 如果没有设置允许的源，拒绝所有跨域请求
       callback(new Error('Not allowed by CORS'));
     }
