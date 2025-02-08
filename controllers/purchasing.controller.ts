@@ -7,7 +7,7 @@ import PurchasingModel from "../models/mongodb/purchasing.model";
 
 export const purchaseMaterial = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {id, number, version} = req.body;
+        const {id, number, version, orderDeadline} = req.body;
 
         if (!id || number === undefined) {
             return next(new ErrorHandler("型号和数量有误", 400));
@@ -36,6 +36,7 @@ export const purchaseMaterial = CatchAsyncError(async (req: Request, res: Respon
                 drawing_no_id: id,
                 purchasedQuantity: material.purchasing
             },
+            orderDeadline: orderDeadline,
             authorizer: req.user?.name,
             status: "初始",
             operator:"",
@@ -68,7 +69,7 @@ export const getAllPurchasing = CatchAsyncError(async (req: Request, res: Respon
         const pageLimit = Math.max(1, parseInt(limit as string) || 5);
         const skip = (pageNumber - 1) * pageLimit;
 
-        const allowedSearchFields = ["_id", "authorizer", , "operator"]
+        const allowedSearchFields = ["_id", "authorizer", "status" , "operator", ""]
         const allowedSortFields = ["_id", "authorizer", "status", "operator"]
 
         const searchField = allowedSearchFields.includes(searchBy as string) ? searchBy: "_id";

@@ -49,7 +49,7 @@ const PurchasingSchema: Schema<IPurchasing> = new mongoose.Schema({
         default: "",
     }
 
-})
+}, {timestamps: true})
 
 const PurchasingModel: Model<IPurchasing> = mongoose.model("Purchasing", PurchasingSchema);
 
