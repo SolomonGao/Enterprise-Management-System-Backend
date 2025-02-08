@@ -34,7 +34,7 @@ export const purchaseMaterial = CatchAsyncError(async (req: Request, res: Respon
             material: {
                 name: material.name,
                 drawing_no_id: id,
-                purchasedQuantity: material.purchasing
+                purchasedQuantity: number
             },
             orderDeadline: orderDeadline,
             authorizer: req.user?.name,
