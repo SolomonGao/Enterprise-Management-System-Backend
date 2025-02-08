@@ -7,7 +7,7 @@ import PurchasingModel from "../models/mongodb/purchasing.model";
 
 export const purchaseMaterial = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const {id, number, version} = req.body;
+        const {id, number, version, orderDeadline} = req.body;
 
         if (!id || number === undefined) {
             return next(new ErrorHandler("型号和数量有误", 400));
@@ -36,6 +36,7 @@ export const purchaseMaterial = CatchAsyncError(async (req: Request, res: Respon
                 drawing_no_id: id,
                 purchasedQuantity: material.purchasing
             },
+            orderDeadline: orderDeadline,
             authorizer: req.user?.name,
             status: "初始",
             operator:"",
@@ -52,3 +53,49 @@ export const purchaseMaterial = CatchAsyncError(async (req: Request, res: Respon
         return next(new ErrorHandler(error.message, 400));
     }
 }) 
+
+export const getAllPurchasing = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const {
+            page = 1,
+            limit = 5,
+            search,
+            searchBy = "_id",
+            order = "ASC",
+            sortBy = "_id",
+        } = req.query;
+
+        const pageNumber =  Math.max(1, parseInt(page as string) || 1);
+        const pageLimit = Math.max(1, parseInt(limit as string) || 5);
+        const skip = (pageNumber - 1) * pageLimit;
+
+        const allowedSearchFields = ["_id", "authorizer", "status" , "operator", ""]
+        const allowedSortFields = ["_id", "authorizer", "status", "operator"]
+
+        const searchField = allowedSearchFields.includes(searchBy as string) ? searchBy: "_id";
+        const sortField = allowedSortFields.includes(sortBy as string) ? sortBy: "_id";
+
+        const searchFilter = search ? { [searchField as any]: { $regex: search, $options : "i"}} : {};
+        const sortOrder = order === "DESC" ? -1 : 1;
+        const sortQuery = { [sortField as any]: sortOrder };
+
+        const totalPurchasing = await PurchasingModel.countDocuments(searchFilter);
+        const data = await PurchasingModel.find(searchFilter)
+            .skip(skip)
+            .limit(pageLimit)
+            .sort(sortQuery as any);
+
+            const totalPages = Math.ceil(totalPurchasing / pageLimit);
+
+            res.status(200).json( {
+                success: true,
+                data,
+                currentPage: pageNumber,
+                totalPages,
+                totalPurchasing,
+            })
+            
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 400));
+    }
+})
