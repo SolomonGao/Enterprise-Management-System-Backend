@@ -104,9 +104,6 @@ export const createOrder = CatchAsyncError(async (req: Request, res: Response, n
     }
 });
 
-
-
-
 export const getAllOrders = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
         const {
@@ -115,47 +112,30 @@ export const getAllOrders = CatchAsyncError(async (req: Request, res: Response, 
             search,
             searchBy = "_id",
             exactId,
-            order = "ASC",
-            sortBy = "_id",
         } = req.query;
 
-        const query: any = {};  
+        const query: any = {};
 
         if (exactId) {
-            // 精确匹配 _id
             query._id = exactId;
         } else if (search) {
-            // 其他字段使用模糊搜索
-            query[searchBy] = { $regex: search, $options: "i" };
+            const allowedSearchFields = ["_id", "customer", "phoneNumber", "address", "deadline", "status"];
+            const searchField = allowedSearchFields.includes(searchBy as string) ? searchBy : "_id";
+            query[searchField as string] = { $regex: search, $options: "i" };
         }
-        // Parse and validate pagination parameters
-        const pageNumber = Math.max(1, parseInt(page as string) || 1); // Ensure page is at least 1
-        const pageLimit = Math.max(1, parseInt(limit as string) || 5); // Ensure limit is at least 1
+
+        const pageNumber = Math.max(1, parseInt(page as string) || 1);
+        const pageLimit = Math.max(1, parseInt(limit as string) || 5);
         const skip = (pageNumber - 1) * pageLimit;
 
-
-        // Validate searchBy and sortBy fields
-        const allowedSearchFields = ["_id", "customer", "phoneNumber", "address", "deadline", "status"];
-        const allowedSortFields = ["_id", "createdAt", "updatedAt"];
-        const searchField = allowedSearchFields.includes(searchBy as string) ? searchBy : "_id";
-        const sortField = allowedSortFields.includes(sortBy as string) ? sortBy : "_id";
-
-        // Build search and sort queries
-        const searchFilter = search ? { [searchField as any]: { $regex: search, $options: "i" } } : {};
-        const sortOrder = order === "DESC" ? -1 : 1;
-        const sortQuery = { [sortField as any]: sortOrder };
-
-        // Query database
-        const totalOrders = await OrderModel.countDocuments(searchFilter);
-        const data = await OrderModel.find(searchFilter)
+        const totalOrders = await OrderModel.countDocuments(query);
+        const data = await OrderModel.find(query)
+            .sort({ createdAt: -1 })
             .skip(skip)
-            .limit(pageLimit)
-            .sort(sortQuery as any);
+            .limit(pageLimit);
 
-        // Calculate total pages
         const totalPages = Math.ceil(totalOrders / pageLimit);
 
-        // Respond with paginated data
         res.status(200).json({
             success: true,
             data,
