@@ -23,9 +23,6 @@ export const getLogs = CatchAsyncError(async (req: Request, res: Response, next:
         const {
             page = 1,
             limit = 10,
-            search,
-            searchBy = "targetId",
-            exactId,
             targetType,
             startDate,
             endDate,
@@ -36,28 +33,28 @@ export const getLogs = CatchAsyncError(async (req: Request, res: Response, next:
         const pageSize = Math.max(1, parseInt(limit as string));
         const skip = (pageNumber - 1) * pageSize;
 
+        // 构建查询条件
         const query: any = {};
 
-        if (exactId) {
-            query._id = exactId;
-        } else if (search) {
-            const allowedSearchFields = ["targetId", "username", "details", "role"];
-            const searchField = allowedSearchFields.includes(searchBy as string) ? searchBy : "targetId";
-            query[searchField as string] = { $regex: search, $options: "i" };
-        } else {
-            const allowedSearchFields = ["targetId", "username", "details", "role"];
-            const searchField = allowedSearchFields.includes(searchBy as string) ? searchBy : "targetId";
-            query[searchField as string] = { $regex: search, $options: "i" };
+        if (targetType) {
+            query.targetType = targetType;
         }
 
-        if (targetType) query.targetType = targetType;
-        if (userId) query.userId = userId;
+        if (userId) {
+            query.userId = userId;
+        }
+
         if (startDate || endDate) {
             query.createdAt = {};
-            if (startDate) query.createdAt.$gte = new Date(startDate as string);
-            if (endDate) query.createdAt.$lte = new Date(endDate as string);
+            if (startDate) {
+                query.createdAt.$gte = new Date(startDate as string);
+            }
+            if (endDate) {
+                query.createdAt.$lte = new Date(endDate as string);
+            }
         }
 
+        // 执行查询
         const totalLogs = await LogModel.countDocuments(query);
         const data = await LogModel.find(query)
             .sort({ createdAt: -1 })
