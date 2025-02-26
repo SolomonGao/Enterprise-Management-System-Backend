@@ -118,7 +118,7 @@
     "mails/**/*.ts",                         // 包括 mails 文件夹中的所有 .ts 文件
     "middlewares/**/*.ts",                   // 包括 middlewares 文件夹中的所有 .ts 文件
     "models/**/*.ts",                        // 包括 models 文件夹中的所有 .ts 文件
-    "routers/**/*.ts",                       // 包括 routers 文件夹中的所有 .ts 文件
+    "routes/**/*.ts",                       // 包括 routers 文件夹中的所有 .ts 文件
     "services/**/*.ts",                      // 包括 services 文件夹中的所有 .ts 文件
     "utils/**/*.ts"                          // 包括 utils 文件夹中的所有 .ts 文件
   ],

@@ -7,7 +7,7 @@ import PurchasingModel from "../models/mongodb/purchasing.model";
 
 export const purchaseMaterial = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
     try {
-        const { id, number, version, orderDeadline } = req.body;
+        const { id, number, version, orderDeadline, price } = req.body;
 
         if (!id || number === undefined) {
             return next(new ErrorHandler("型号和数量有误", 400));
@@ -40,6 +40,7 @@ export const purchaseMaterial = CatchAsyncError(async (req: Request, res: Respon
             authorizer: req.user?.name,
             status: "初始",
             operator: "",
+            price: price,
         };
 
         await PurchasingModel.create(newPurchasing);

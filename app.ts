@@ -3,12 +3,13 @@ export const app = express();
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { ErrorMiddleware } from "./middlewares/error";
-import userRouter from "./routers/user.Router";
-import productRouter from "./routers/product.Router";
-import leafMateiralRouter from "./routers/leaf.mateiral.router";
-import rootMateiralRouter from "./routers/root.mateiral.router";
-import orderRouter from "./routers/order.router";
-import purchasingRouter from "./routers/purchasing.router";
+import userRouter from "./routes/user.Router";
+import productRouter from "./routes/product.Router";
+import leafMateiralRouter from "./routes/leaf.mateiral.router";
+import rootMateiralRouter from "./routes/root.mateiral.router";
+import orderRouter from "./routes/order.router";
+import purchasingRouter from "./routes/purchasing.router";
+import logRouter from "./routes/log.router";
 
 const fs = require('fs'); // 引入 fs 模块
 const path = require('path'); // 引入 path 模块，便于处理文件路径
@@ -79,6 +80,7 @@ app.use("/api/v1/leaf", leafMateiralRouter);
 app.use("/api/v1/root", rootMateiralRouter);
 app.use("/api/v1/order", orderRouter);
 app.use("/api/v1/purchasing", purchasingRouter);
+app.use("/api/v1/log", logRouter);
 
 
 

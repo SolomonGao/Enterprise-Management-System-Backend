@@ -29,7 +29,9 @@ interface ILeafMaterial {
 export default class LeafMaterialModel extends Model<ILeafMaterial> {
 
     @PrimaryKey
-    @Column
+    @Column({
+        unique: true,
+    })
     drawing_no_id!: string;
 
     @Column(DataType.STRING)

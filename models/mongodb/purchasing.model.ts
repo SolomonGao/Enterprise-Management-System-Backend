@@ -27,6 +27,8 @@ export interface IPurchasing extends Document {
     orderDeadline: string;
     status: string;
     operator: string;
+    price: number;
+    total_price: number;
 }
 
 const PurchasingSchema: Schema<IPurchasing> = new mongoose.Schema({
@@ -47,10 +49,24 @@ const PurchasingSchema: Schema<IPurchasing> = new mongoose.Schema({
     operator: {
         type: String,
         default: "",
+    },
+    price: {
+        type: Number,
+        require: [true, "请输入采购的配件单价"]
+    },
+    total_price: {
+        type: Number,
+        default: 0
     }
 
 }, {timestamps: true})
 
+PurchasingSchema.pre<IPurchasing>("save", function (next) {
+    if (this.material && this.price) {
+        this.total_price = this.material.purchasedQuantity * this.price;
+    }
+    next();
+});
 
 const PurchasingModel: Model<IPurchasing> = mongoose.model("Purchasing", PurchasingSchema);
 

@@ -47,6 +47,7 @@ export interface IOrder extends Document {
     status: string;
     deadline: string;
     requiredMaterials: Material[]
+    price: number;
     getdeadline: () => Promise<number>;
     version: number;
 }
@@ -74,6 +75,10 @@ const OrderSchema: Schema<IOrder> = new mongoose.Schema({
     status: {
         type: String,
         default: "初始",
+    },
+    price: {
+        type: Number,
+        required: [true, "请输入订单价格"]
     },
     deadline: {
         type: String,

@@ -61,7 +61,7 @@ export const getMaterialsByProduct = CatchAsyncError(async (req: Request, res: R
         const {
             idProduct,
             page = 1,
-            limit = 5, } = req.query;
+            limit = 10, } = req.query;
 
         const offset = (Number(page) - 1) * Number(limit);
 
@@ -89,6 +89,8 @@ export const getMaterialsByProduct = CatchAsyncError(async (req: Request, res: R
                         "specification",
                         "drawing_no_secure_url",
                         "purchasing",
+                        "row_materials",
+                        "comments",
                         "version"
                     ], // 加载产品的名称和泵型号等
                 }

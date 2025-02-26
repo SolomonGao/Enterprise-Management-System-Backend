@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import { NextFunction, query, Request, Response } from "express";
 import { CatchAsyncError } from "../middlewares/catchAsyncErrors";
 import ErrorHandler from "../utils/ErrorHandler";
 import OrderModel from "../models/mongodb/order.model";
@@ -11,6 +11,7 @@ interface IOrderBody {
     address: string;
     phoneNumber: string;
     deadline: string;
+    price: number;
 }
 
 type Product = {
@@ -32,7 +33,7 @@ export const createOrder = CatchAsyncError(async (req: Request, res: Response, n
             return next(new ErrorHandler("订单信息或产品列表不能为空", 400));
         }
 
-        const { comments, customer, address, phoneNumber, deadline } = order;
+        const { comments, customer, address, phoneNumber, deadline, price } = order;
         const { products } = selectedProductsId;
 
         // 收集所有产品 ID 和数量
@@ -89,6 +90,7 @@ export const createOrder = CatchAsyncError(async (req: Request, res: Response, n
             address,
             phoneNumber,
             deadline,
+            price,
             requiredMaterials, // 存储零配件需求
         });
 
@@ -112,10 +114,20 @@ export const getAllOrders = CatchAsyncError(async (req: Request, res: Response, 
             limit = 5,
             search,
             searchBy = "_id",
+            exactId,
             order = "ASC",
             sortBy = "_id",
         } = req.query;
 
+        const query: any = {};  
+
+        if (exactId) {
+            // 精确匹配 _id
+            query._id = exactId;
+        } else if (search) {
+            // 其他字段使用模糊搜索
+            query[searchBy] = { $regex: search, $options: "i" };
+        }
         // Parse and validate pagination parameters
         const pageNumber = Math.max(1, parseInt(page as string) || 1); // Ensure page is at least 1
         const pageLimit = Math.max(1, parseInt(limit as string) || 5); // Ensure limit is at least 1
@@ -311,6 +323,91 @@ export const useRequiredMaterials = CatchAsyncError(async (req: Request, res: Re
         res.status(200).json({
             success: true,
             message: "订单配件需求已成功处理",
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+export const updateOrder = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { orderId, orderInfo, version } = req.body;
+
+        const order = await OrderModel.findById(orderId);
+
+        if (!order) {
+            return next(new ErrorHandler("没有找到订单", 404));
+        }
+
+        // 使用乐观锁检查版本
+        if (order.__v !== version) {
+            return next(new ErrorHandler("订单已被其他用户修改，请刷新后重试", 409));
+        }
+
+        // 更新订单信息
+        const updatedOrder = await OrderModel.findByIdAndUpdate(
+            orderId,
+            {
+                $set: {
+                    ...orderInfo,
+                    __v: version + 1
+                }
+            },
+            { new: true }
+        );
+
+        res.status(200).json({
+            success: true,
+            order: updatedOrder
+        });
+    } catch (error: any) {
+        return next(new ErrorHandler(error.message, 500));
+    }
+});
+
+export const restoreInventory = CatchAsyncError(async (req: Request, res: Response, next: NextFunction) => {
+    try {
+        const { orderId } = req.body;
+
+        const order = await OrderModel.findById(orderId);
+
+        if (!order) {
+            return next(new ErrorHandler("没有找到订单", 404));
+        }
+
+        // 获取订单中的所有需要恢复的材料
+        const materialsToRestore = order.requiredMaterials || [];
+
+        if (materialsToRestore.length === 0) {
+            return next(new ErrorHandler("该订单没有需要恢复的材料", 400));
+        }
+
+        // 批量更新库存
+        await Promise.all(
+            materialsToRestore.map(async (material: any) => {
+                const { drawing_no_id, requiredQuantity } = material;
+                
+                // 查找材料并更新库存
+                const existingMaterial = await LeafMaterialModel.findOne({
+                    where: { drawing_no_id }
+                });
+
+                if (existingMaterial) {
+                    await LeafMaterialModel.update(
+                        {
+                            counts: existingMaterial.counts + requiredQuantity
+                        },
+                        {
+                            where: { drawing_no_id }
+                        }
+                    );
+                }
+            })
+        );
+
+        res.status(200).json({
+            success: true,
+            message: "库存已成功恢复"
         });
     } catch (error: any) {
         return next(new ErrorHandler(error.message, 500));
