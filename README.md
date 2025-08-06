@@ -52,6 +52,8 @@ Designed for real-world enterprise needs, it provides a secure, scalable, and ma
 ---
 
 ## 📁 Project Structure
+
+```txt
 server/
 ├── src/
 │ ├── controllers/ # API controllers
@@ -64,6 +66,7 @@ server/
 ├── .env # Environment configuration
 ├── tsconfig.json # TypeScript config
 └── package.json # Dependencies and scripts
+```
 
 ---
 
